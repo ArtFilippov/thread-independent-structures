@@ -48,7 +48,8 @@ class fine_grained_thread_pool {
     }
     ~fine_grained_thread_pool() { isWorking = false; }
 
-    template <typename BoolFunc, typename Callable> auto submit(Callable &&f, BoolFunc &&cond) {
+    template <typename BoolFunc, typename Callable, typename Notice>
+    auto submit(Callable &&f, BoolFunc &&cond, Notice &&n) {
         typedef typename std::result_of<Callable()>::type result_type;
         if constexpr (isOptional<result_type>::value) {
             std::promise<typename result_type::value_type> promise;
@@ -57,7 +58,8 @@ class fine_grained_thread_pool {
                 std::move(promise), std::move(cond),
                 std::move([func = std::move(f)]() mutable -> std::optional<typename result_type::value_type> {
                     return func();
-                }));
+                }),
+                std::move(n));
             tasks.push(task);
             return result;
         } else {
@@ -65,10 +67,15 @@ class fine_grained_thread_pool {
             std::future<result_type> result(promise.get_future());
             auto task = std::make_shared<stepwise_function_wrapper>(
                 std::move(promise), std::move(cond),
-                std::move([f]() mutable -> std::optional<result_type> { return std::optional<result_type>{f()}; }));
+                std::move([f]() mutable -> std::optional<result_type> { return std::optional<result_type>{f()}; }),
+                std::move(n));
             tasks.push(task);
             return result;
         }
+    }
+
+    template <typename BoolFunc, typename Callable> auto submit(Callable &&f, BoolFunc &&cond) {
+        return submit(f, cond, []() { return; });
     }
 
     template <typename Callable> auto submit(Callable &&f) {
