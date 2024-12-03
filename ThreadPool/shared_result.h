@@ -19,6 +19,7 @@ template <typename T> class shared_result {
     }
 
   public:
+    shared_result() : reference_count(new std::atomic_int(0)) {}
     shared_result(const shared_result<T> &other) noexcept
         : reference_count(other.reference_count), future(other.future) {
         reference_count->operator++();
@@ -52,7 +53,8 @@ template <typename T> class shared_result {
         return *this;
     }
 
-    const shared_result<T> &operator=(const shared_result<T> &&) = delete;
+    const shared_result<T> &operator=(const shared_result<T> &) = delete;
+    const shared_result<T> &operator=(shared_result<T> &&other) = delete;
 };
 
 template <typename T> class shared_result_control_block {
