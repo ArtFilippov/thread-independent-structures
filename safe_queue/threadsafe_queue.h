@@ -27,7 +27,7 @@ template <typename T> class threadsafe_queue {
     }
 
     bool try_pop(T &value) {
-        std::lock_guard lg(mut);
+        std::lock_guard<std::mutex> lg(mut);
         if (data.empty()) {
             return false;
         }
@@ -37,7 +37,7 @@ template <typename T> class threadsafe_queue {
     }
 
     std::shared_ptr<T> try_pop() {
-        std::lock_guard lg(mut);
+        std::lock_guard<std::mutex> lg(mut);
         if (data.empty()) {
             return NULL;
         }
@@ -49,19 +49,19 @@ template <typename T> class threadsafe_queue {
     void push(T value) {
         std::shared_ptr<T> new_value(std::make_shared<T>(std::move(value)));
 
-        std::lock_guard lg(mut);
+        std::lock_guard<std::mutex> lg(mut);
         data.push(new_value);
         cond.notify_one();
     }
 
     void push(std::shared_ptr<T> value) {
-        std::lock_guard lg(mut);
+        std::lock_guard<std::mutex> lg(mut);
         data.push(value);
         cond.notify_one();
     }
 
     bool empty() const {
-        std::lock_guard lg(mut);
+        std::lock_guard<std::mutex> lg(mut);
         return data.empty();
     }
 };

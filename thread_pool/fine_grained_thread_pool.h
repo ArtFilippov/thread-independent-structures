@@ -2,7 +2,7 @@
 
 #include "stepwise_function_wrapper.h"
 #include "join_threads.h"
-#include "../SafeQueue/threadsafe_queue.h"
+#include "../safe_queue/threadsafe_queue.h"
 
 #include <atomic>
 #include <future>
