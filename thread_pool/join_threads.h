@@ -4,10 +4,10 @@
 #include <thread>
 
 class join_threads {
-    std::vector<std::thread> &threads_;
+    std::vector<std::thread> threads_{};
 
   public:
-    explicit join_threads(std::vector<std::thread> &threads) : threads_(threads) {}
+    join_threads() {}
 
     ~join_threads() {
         for (int i = 0; i < (int) threads_.size(); ++i) {
@@ -16,4 +16,6 @@ class join_threads {
             }
         }
     }
+
+    std::vector<std::thread> *operator->() { return &threads_; }
 };

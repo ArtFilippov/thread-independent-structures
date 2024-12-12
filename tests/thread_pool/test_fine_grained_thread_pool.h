@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../../ThreadPool/fine_grained_thread_pool.h"
+#include "../../thread_pool/fine_grained_thread_pool.h"
 
 #include <chrono>
 

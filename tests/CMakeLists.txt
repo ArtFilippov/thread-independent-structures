@@ -22,7 +22,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(../../googletest/googletest/include)
 include_directories(../../googletest/googlemock/include)
 
-include_directories(../ThreadPool)
+include_directories(../thread_pool)
 
 if(OS MATCHES "arm")
     target_link_libraries(test_main ${CMAKE_CURRENT_SOURCE_DIR}/../../googletest/build/lib/libgtest.a)

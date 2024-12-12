@@ -14,8 +14,7 @@ template <typename T> struct isOptional<std::optional<T>> : std::true_type {};
 class fine_grained_thread_pool {
     std::atomic_bool isWorking{true};
     threadsafe_queue<stepwise_function_wrapper> tasks;
-    std::vector<std::thread> threads;
-    join_threads joiner;
+    join_threads joiner{};
 
   private:
     void working_thread() {
@@ -32,14 +31,14 @@ class fine_grained_thread_pool {
     }
 
   public:
-    fine_grained_thread_pool(unsigned number_of_threads = 0) : joiner(threads) {
+    fine_grained_thread_pool(unsigned number_of_threads = 0) {
         try {
             if (number_of_threads == 0) {
                 number_of_threads = std::thread::hardware_concurrency();
             }
 
             for (unsigned i = 0; i < number_of_threads; ++i) {
-                threads.push_back(std::thread(&fine_grained_thread_pool::working_thread, this));
+                joiner->push_back(std::thread(&fine_grained_thread_pool::working_thread, this));
             }
         } catch (...) {
             isWorking = false;
@@ -48,6 +47,26 @@ class fine_grained_thread_pool {
     }
     ~fine_grained_thread_pool() { isWorking = false; }
 
+    /**
+     * @brief
+     * - Помещает вызываемый объект `f` в очередь. Когда очередь дойдёт до `f`, один поток из пула примется за
+     * выполнение `f()`
+     *
+     * - Если при вызове `f()` вернётся пустое значение, задача перемещается в конец очереди, позже один из потоков
+     * вернётся к её выполнению
+     *
+     * - Если при вызове `f()` вернётся не пустое значение, задача считается выполненной
+     *
+     * - После каждого подхода к задаче, проверяется условие `cond()`. Если оно `true`, задача завершается досрочно
+     *
+     * - Когда задача завершена, вне зависимости досрочно или нет, вызывается `n()`
+     * @param f Вызываемый объект, возвращающий `std::optional<возвращаемый тип>` (либо просто `возвращаемый тип`, если
+     * задача рассчитана на один подход)  - задача для пула потоков
+     * @param cond Вызываемый объект, возвращающий `bool` - условие досрочного завершения задачи
+     * @param n Вызываемый объект, обработчик завершения задачи
+     * @return Объект `std::future<возвращаемый тип>`, связанный с задачей `f`. Когда задача будет выполнена, в этом
+     * объекте появится результат её выполнения
+     */
     template <typename BoolFunc, typename Callable, typename Notice>
     auto submit(Callable &&f, BoolFunc &&cond, Notice &&n) {
         typedef typename std::result_of<Callable()>::type result_type;
@@ -74,10 +93,34 @@ class fine_grained_thread_pool {
         }
     }
 
+    /**
+     * @brief
+     * - Помещает вызываемый объект `f` в очередь. Когда очередь дойдёт до `f`, один поток из пула примется за
+     * выполнение `f()`
+     *
+     * - Если при вызове `f()` вернётся пустое значение, задача перемещается в конец очереди, позже один из потоков
+     * вернётся к её выполнению
+     *
+     * - Если при вызове `f()` вернётся не пустое значение, задача считается выполненной
+     *
+     * - После каждого подхода к задаче, проверяется условие `cond()`. Если оно `true`, задача завершается досрочно
+     * @param f Вызываемый объект, возвращающий `std::optional<возвращаемый тип>` (либо просто `возвращаемый тип`, если
+     * задача рассчитана на один подход) - задача для пула потоков
+     * @param cond Вызываемый объект, возвращающий `bool` - условие досрочного завершения задачи
+     * @return Объект `std::future<возвращаемый тип>`, связанный с задачей `f`. Когда задача будет выполнена, в этом
+     * объекте появится результат её выполнения
+     */
     template <typename BoolFunc, typename Callable> auto submit(Callable &&f, BoolFunc &&cond) {
         return submit(f, cond, []() { return; });
     }
 
+    /**
+     * @brief Помещает вызываемый объект `f` в очередь. Когда очередь дойдёт до `f`, один поток из пула примется за
+     * выполнение `f()` до её завершения
+     * @param f Вызываемый объект, задача для пула потоков
+     * @return Объект `std::future`, связанный с задачей `f`. Когда задача будет выполнена, в этом объекте появится
+     * результат её выполнения
+     */
     template <typename Callable> auto submit(Callable &&f) {
         return submit(f, []() { return false; });
     }
