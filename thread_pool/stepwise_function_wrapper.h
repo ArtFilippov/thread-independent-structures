@@ -42,6 +42,7 @@ class stepwise_function_wrapper {
 
         impl_type(std::promise<result_type> promise, Cond &&c, F &&f, Notice &&n)
             : f_(std::move(f)), c_(std::move(c)), n_(std::move(n)), promise(std::move(promise)) {}
+
         void step() override {
             try {
                 std::optional<result_type> opt = f_();

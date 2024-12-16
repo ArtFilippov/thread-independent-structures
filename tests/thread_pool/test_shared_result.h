@@ -8,16 +8,15 @@
 
 #include <iostream>
 
-typedef stepwise::shared_result_control_block<int> control_int;
-typedef std::shared_ptr<control_int> shared_control_int;
+using namespace stepwise;
 
 class test_shared_result : public ::testing::Test {
   public:
     void SetUp() { pool = std::make_unique<fine_grained_thread_pool>(1); }
 
-    shared_control_int block{std::make_shared<control_int>()};
+    task_ptr<int> block{shared_task<int>::make_task()};
 
-    std::unique_ptr<fine_grained_thread_pool> pool;
+    std::shared_ptr<fine_grained_thread_pool> pool;
 };
 
 TEST_F(test_shared_result, reference_count) {
@@ -39,11 +38,11 @@ TEST_F(test_shared_result, reference_count) {
     };
 
     {
-        auto res = block->new_share(pool->submit(task, cond, notice));
-        auto res1 = block->share();
-        auto res2 = block->share();
-        auto res3 = block->share();
-        auto res4 = block->share();
+        auto res = block->share(pool, task, cond, notice);
+        auto res1 = block->share(pool, task, cond, notice);
+        auto res2 = block->share(pool, task, cond, notice);
+        auto res3 = block->share(pool, task, cond, notice);
+        auto res4 = block->share(pool, task, cond, notice);
         auto res5 = res4;
     }
 
@@ -75,7 +74,7 @@ TEST_F(test_shared_result, vector) {
     };
 
     {
-        auto res = block->new_share(pool->submit(task, cond, notice));
+        auto res = block->share(pool, task, cond, notice);
         for (int i = 0; i < TASKS_NUMBER; ++i) {
             results.push_back(res);
         }
