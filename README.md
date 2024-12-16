@@ -45,14 +45,14 @@ int main()
 Содержит класс `fine_grained_thread_pool`, реализующий пул потоков. Конструктор принимает один параметр - количество потоков в пуле. Значение по умолчанию - hardware_concurrency(). Примеры использования смотрите [здесь](https://gitea/filippar/thread_independent_structures/src/branch/main/tests/thread_pool/test_fine_grained_thread_pool.h)
 
 ### thread_pool/shared_result.h
-Содержит шаблоны классов `shared_result` и `shared_result_control_block` для ожидания завершения асинхронных задач. Параметр шаблонов - тип ожидаемого значения 
+Содержит шаблоны классов `shared_result` и `shared_task` для ожидания завершения задач, помещённых в пул потоков. Параметр шаблонов - тип ожидаемого значения 
 
-- `shared_result_control_block`
-    - Реализует медоты для контроля состояния задачи, помещённой в пул потоков, или созданой с помощью `std::async()`, или с помощью какой-либо связки future/promise. 
+- `shared_task`
+    - Реализует медоты для контроля состояния задачи, помещённой в пул потоков.
 
 - `shared_result`
     - Является надстройкой над `std::shared_future` и позволяет делать всё, что можно делать с `std::shared_future`
-    - Получить экземпляры `shared_result` можно только с помощью вызова `shared_result_control_block.share()`, или `shared_result_control_block.new_share()`, или через конструктор копирования
-    - После разрушения всех `std::shared_future`, связанных с одним `shared_result_control_block`, вызов соответсвующего `shared_result_control_block.does_it_expect()` вернёт `false`. Это можно использовать в условии досрочного завершения задачи в `fine_grained_thread_pool`
+    - Получить экземпляры `shared_result` можно только с помощью вызова `shared_task.share()` или через конструктор копирования
+    - После разрушения всех `std::shared_future`, связанных с одним `shared_task`, вызов соответсвующего `shared_task.does_it_expect()` вернёт `false`. Это можно использовать в условии досрочного завершения задачи в `fine_grained_thread_pool`
 
 Пример использования смотрите [здесь](https://gitea/filippar/thread_independent_structures/src/branch/main/tests/thread_pool/test_shared_result.h)
