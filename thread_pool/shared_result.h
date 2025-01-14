@@ -56,11 +56,13 @@ template <typename T> class shared_task : public std::enable_shared_from_this<sh
 
         std::lock_guard<std::mutex> lg{result_mutex};
         if (is_valid.compare_exchange_strong(current, true)) {
-            reference_count = std::make_shared<std::atomic_int>(-1);
+            reference_count = std::make_shared<std::atomic_int>(0);
 
             future = pool->submit(std::move(f), std::move(c), std::move(n)).share();
 
             auto res = shared_result<T>(reference_count, future);
+
+            reference_count->store(0);
 
             return res;
         } else {
@@ -123,22 +125,15 @@ template <typename T> class shared_result {
      *
      * - `false` - результат не готов
      */
-    bool try_get() { return (future.wait_for(0) == std::future_status::ready); }
+    bool try_get() { return (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
 
     const T &get() { return future.get(); }
+
+    bool empty() { return reference_count.get() == nullptr; }
 
     const shared_result<T> &operator=(shared_result<T> other) {
         reference_count.swap(other.reference_count);
         std::swap(future, other.future);
-
-        return *this;
-    }
-
-    const shared_result<T> &operator=(shared_result<T> &&other) {
-        shared_result<T> tmp(std::move(other));
-
-        reference_count.swap(other.reference_count);
-        std::swap(future, tmp.future);
 
         return *this;
     }
