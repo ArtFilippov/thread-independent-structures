@@ -106,6 +106,8 @@ template <typename T> class shared_result {
         }
     }
 
+    int count() { return reference_count->load(); }
+
     void wait() { future.wait(); }
 
     template <class Rep, class Period>
