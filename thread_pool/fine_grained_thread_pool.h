@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stepwise_function_wrapper.h"
-#include "join_threads.h"
 #include "../safe_queue/threadsafe_queue.h"
 
 #include <atomic>
@@ -12,6 +11,26 @@ template <typename T> struct isOptional : std::false_type {};
 template <typename T> struct isOptional<std::optional<T>> : std::true_type {};
 
 class fine_grained_thread_pool {
+
+    class join_threads {
+        std::vector<std::thread> threads_{};
+
+      public:
+        join_threads() {}
+
+        ~join_threads() {
+            for (int i = 0; i < (int) threads_.size(); ++i) {
+                if (threads_[i].joinable()) {
+                    threads_[i].join();
+                }
+            }
+        }
+
+        std::vector<std::thread> *operator->() { return &threads_; }
+        // объект joiner должен разрушаться строго после разрушения вектора потоков. Поэтому решено поместить вектор
+        // потоков в joiner, для снижения требований к клиентскому коду
+    };
+
     std::atomic_bool isWorking{true};
     threadsafe_queue<stepwise_function_wrapper> tasks;
     join_threads joiner{};
@@ -19,13 +38,10 @@ class fine_grained_thread_pool {
   private:
     void working_thread() {
         while (isWorking) {
-            if (auto task = tasks.try_pop()) {
-                task->step();
-                if (!task->is_done()) {
-                    tasks.push(task);
-                }
-            } else {
-                std::this_thread::yield();
+            auto task = tasks.wait_and_pop();
+            task->step();
+            if (!task->is_done()) {
+                tasks.push(task);
             }
         }
     }

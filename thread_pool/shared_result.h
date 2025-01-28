@@ -11,7 +11,6 @@ namespace stepwise {
 template <typename T> class shared_result;
 
 template <typename T> class shared_task : public std::enable_shared_from_this<shared_task<T>> {
-    friend class shared_result<T>;
 
     std::atomic_bool is_valid{false};
 

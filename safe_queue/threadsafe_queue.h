@@ -7,11 +7,13 @@
 
 template <typename T> class threadsafe_queue {
 
-    std::mutex mut;
+    mutable std::mutex mut;
     std::queue<std::shared_ptr<T>> data;
     std::condition_variable cond;
 
   public:
+    const threadsafe_queue &operator=(const threadsafe_queue &) = delete;
+
     /**
      * @brief
      * - Если очередь не пуста, перемещает (std::move) `front` элемент в аргумент `value`
@@ -83,7 +85,7 @@ template <typename T> class threadsafe_queue {
     std::shared_ptr<T> try_pop() {
         std::lock_guard<std::mutex> lg(mut);
         if (data.empty()) {
-            return NULL;
+            return {nullptr};
         }
         std::shared_ptr<T> value = data.front();
         data.pop();
@@ -95,6 +97,9 @@ template <typename T> class threadsafe_queue {
      * - Оборачивает `value` в `std::shared_ptr` и добавляет его в очередь
      */
     void push(T value) {
+        // нельзя принимать значение по ссылке, так как в этом случае оригинальный объект будет перемещён.
+        // при этом, если необходимо переместить объект, вызываем push(std::move(value)) и вызывается конструктор
+        // копирования перемещением.
         std::shared_ptr<T> new_value(std::make_shared<T>(std::move(value)));
 
         std::lock_guard<std::mutex> lg(mut);
@@ -106,7 +111,7 @@ template <typename T> class threadsafe_queue {
      * @brief
      * - Помещает в очередь уже обёрнутое в `std::shared_ptr` значение
      */
-    void push(std::shared_ptr<T> value) {
+    void push(const std::shared_ptr<T> &value) {
         std::lock_guard<std::mutex> lg(mut);
         data.push(value);
         cond.notify_one();

@@ -10,7 +10,7 @@ class bad_value : public std::exception {
     std::string msg;
 
   public:
-    bad_value(std::string message) : msg(message) {}
+    bad_value(const std::string &message) : msg(message) {}
     const char *what() const noexcept override { return msg.c_str(); }
 };
 
@@ -18,7 +18,7 @@ class out_of_time : public std::exception {
     std::string msg;
 
   public:
-    out_of_time(std::string message) : msg(message) {}
+    out_of_time(const std::string &message) : msg(message) {}
     const char *what() const noexcept override { return msg.c_str(); }
 };
 } // namespace stepwise
@@ -34,6 +34,10 @@ class stepwise_function_wrapper {
 
     template <typename Cond, typename F, typename Notice> struct impl_type : impl_base {
         typedef typename std::result_of<F()>::type::value_type result_type;
+        // класс является обёрткой над функцией, возвращающей std::optional. При этом если возвращается пустое значение,
+        // std::promise не устанавливается. Если возвращается не пустое значение, в std::promise устанавливается
+        // std::optional::value
+
         F f_;
         Cond c_;
         Notice n_;
