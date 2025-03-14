@@ -23,6 +23,35 @@ class out_of_time : public std::exception {
 };
 } // namespace stepwise
 
+template <typename T> struct isOptional : std::false_type {};
+template <typename T> struct isOptional<std::optional<T>> : std::true_type {};
+
+class stepwise_function_wrapper;
+
+template <typename T> struct wrapped_function {
+    std::shared_ptr<stepwise_function_wrapper> function{nullptr};
+    std::future<T> future{};
+
+    wrapped_function() {}
+
+    wrapped_function(std::shared_ptr<stepwise_function_wrapper> &function, std::future<T> &&future)
+        : function(function), future(std::move(future)) {}
+
+    wrapped_function(wrapped_function &&other) : function(other.function), future(std::move(future)) {}
+
+    const wrapped_function &operator=(wrapped_function &&other) {
+        std::swap(function, other.function);
+
+        auto tmp = std::move(future);
+
+        future = std::move(other.future);
+
+        other.future = std::move(tmp);
+
+        return *this;
+    }
+};
+
 class stepwise_function_wrapper {
     struct impl_base {
         virtual void step() = 0;
@@ -94,5 +123,29 @@ class stepwise_function_wrapper {
     stepwise_function_wrapper &operator=(stepwise_function_wrapper &&other) {
         impl = std::move(other.impl);
         return *this;
+    }
+
+    template <typename Callable, typename BoolFunc, typename Notice>
+    static auto wrap(Callable &&f, BoolFunc &&cond, Notice &&n) {
+        typedef typename std::result_of<Callable()>::type result_type;
+        if constexpr (isOptional<result_type>::value) {
+            std::promise<typename result_type::value_type> promise;
+            std::future<typename result_type::value_type> result(promise.get_future());
+            auto task = std::make_shared<stepwise_function_wrapper>(
+                std::move(promise), std::move(cond),
+                std::move([func = std::move(f)]() mutable -> std::optional<typename result_type::value_type> {
+                    return func();
+                }),
+                std::move(n));
+            return wrapped_function<typename result_type::value_type>(task, std::move(result));
+        } else {
+            std::promise<result_type> promise;
+            std::future<result_type> result(promise.get_future());
+            auto task = std::make_shared<stepwise_function_wrapper>(
+                std::move(promise), std::move(cond),
+                std::move([f]() mutable -> std::optional<result_type> { return std::optional<result_type>{f()}; }),
+                std::move(n));
+            return wrapped_function<result_type>(task, std::move(result));
+        }
     }
 };

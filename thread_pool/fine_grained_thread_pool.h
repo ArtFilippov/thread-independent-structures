@@ -7,9 +7,6 @@
 #include <future>
 #include <optional>
 
-template <typename T> struct isOptional : std::false_type {};
-template <typename T> struct isOptional<std::optional<T>> : std::true_type {};
-
 class fine_grained_thread_pool {
 
     class join_threads {
@@ -39,6 +36,11 @@ class fine_grained_thread_pool {
     void working_thread() {
         while (isWorking) {
             auto task = tasks.wait_and_pop();
+
+            if (!task) {
+                break;
+            }
+
             task->step();
             if (!task->is_done()) {
                 tasks.push(task);
@@ -61,7 +63,10 @@ class fine_grained_thread_pool {
             throw;
         }
     }
-    ~fine_grained_thread_pool() { isWorking = false; }
+    ~fine_grained_thread_pool() {
+        isWorking = false;
+        tasks.disable_wait_and_pop();
+    }
 
     /**
      * @brief
@@ -83,30 +88,18 @@ class fine_grained_thread_pool {
      * @return Объект `std::future<возвращаемый тип>`, связанный с задачей `f`. Когда задача будет выполнена, в этом
      * объекте появится результат её выполнения
      */
-    template <typename BoolFunc, typename Callable, typename Notice>
+    template <typename Callable, typename BoolFunc, typename Notice>
     auto submit(Callable &&f, BoolFunc &&cond, Notice &&n) {
-        typedef typename std::result_of<Callable()>::type result_type;
-        if constexpr (isOptional<result_type>::value) {
-            std::promise<typename result_type::value_type> promise;
-            std::future<typename result_type::value_type> result(promise.get_future());
-            auto task = std::make_shared<stepwise_function_wrapper>(
-                std::move(promise), std::move(cond),
-                std::move([func = std::move(f)]() mutable -> std::optional<typename result_type::value_type> {
-                    return func();
-                }),
-                std::move(n));
-            tasks.push(task);
-            return result;
-        } else {
-            std::promise<result_type> promise;
-            std::future<result_type> result(promise.get_future());
-            auto task = std::make_shared<stepwise_function_wrapper>(
-                std::move(promise), std::move(cond),
-                std::move([f]() mutable -> std::optional<result_type> { return std::optional<result_type>{f()}; }),
-                std::move(n));
-            tasks.push(task);
-            return result;
-        }
+        auto wrapped_task = stepwise_function_wrapper::wrap(std::move(f), std::move(cond), std::move(n));
+        return submit(wrapped_task);
+    }
+
+    template <typename ResultType> auto submit(wrapped_function<ResultType> &wrapped_task) {
+        auto &[task, future] = wrapped_task;
+
+        tasks.push(task);
+
+        return std::move(future);
     }
 
     /**

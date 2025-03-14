@@ -1,0 +1,1 @@
+/usr/bin/g++ -g CMakeFiles/test_main.dir/test_main.cpp.obj -o test_main  /home/kali/googletest/lib/libgtest.a /home/kali/googletest/lib/libgmock.a /home/kali/googletest/lib/libgmock_main.a /home/kali/googletest/lib/libgtest_main.a

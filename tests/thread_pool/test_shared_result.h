@@ -4,9 +4,11 @@
 #include <gmock/gmock.h>
 
 #include "../../thread_pool/fine_grained_thread_pool.h"
-#include "../../thread_pool/shared_result.h"
+#include "../../thread_pool/Task.h"
 
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 using namespace stepwise;
 
@@ -14,12 +16,14 @@ class test_shared_result : public ::testing::Test {
   public:
     void SetUp() { pool = std::make_unique<fine_grained_thread_pool>(1); }
 
-    task_ptr<int> block{shared_task<int>::make_task()};
+    task_ptr<int> block{Task<int>::create([]() { return 1; })};
 
     std::shared_ptr<fine_grained_thread_pool> pool;
 };
 
 TEST_F(test_shared_result, reference_count) {
+    std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
+
     std::string ans = "stop";
 
     std::stringstream msg;
@@ -29,16 +33,13 @@ TEST_F(test_shared_result, reference_count) {
         return {};
     };
 
-    auto cond = [=]() -> bool { return !block->does_it_expect(); };
+    auto cond = [=]() -> bool { return false; };
 
     std::stringstream log;
-    auto notice = [=, &log]() mutable -> void {
-        log << "stop";
-        block->notify_about_readiness();
-    };
+    auto notice = [&log]() mutable -> void { log << "stop"; };
 
     {
-        auto res = block->share(pool, task, cond, notice);
+        auto res = block->share(pool, task, cond, std::move(notice));
         auto res1 = block->share(pool, task, cond, notice);
         auto res2 = block->share(pool, task, cond, notice);
         auto res3 = block->share(pool, task, cond, notice);
@@ -54,7 +55,7 @@ TEST_F(test_shared_result, reference_count) {
 TEST_F(test_shared_result, vector) {
     constexpr int TASKS_NUMBER = 1000;
 
-    std::vector<stepwise::shared_result<int>> results;
+    std::vector<stepwise::Task<int>::Result> results;
 
     std::string ans = "stop";
 
@@ -65,13 +66,10 @@ TEST_F(test_shared_result, vector) {
         return {};
     };
 
-    auto cond = [=]() -> bool { return !block->does_it_expect(); };
+    auto cond = [=]() -> bool { return false; };
 
     std::stringstream log;
-    auto notice = [=, &log]() mutable -> void {
-        log << "stop";
-        block->notify_about_readiness();
-    };
+    auto notice = [=, &log]() mutable -> void { log << "stop"; };
 
     {
         auto res = block->share(pool, task, cond, notice);

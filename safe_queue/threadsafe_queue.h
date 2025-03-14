@@ -10,9 +10,15 @@ template <typename T> class threadsafe_queue {
     mutable std::mutex mut;
     std::queue<std::shared_ptr<T>> data;
     std::condition_variable cond;
+    volatile std::atomic_bool is_wait_and_pop_enable{true};
 
   public:
     const threadsafe_queue &operator=(const threadsafe_queue &) = delete;
+
+    void disable_wait_and_pop() {
+        is_wait_and_pop_enable.store(false);
+        cond.notify_all();
+    }
 
     /**
      * @brief
@@ -23,11 +29,17 @@ template <typename T> class threadsafe_queue {
      * - Время O(1)
      * @param value Ссылка на переменную, где окажется `front` элемент очереди
      */
-    void wait_and_pop(T &value) {
+    bool wait_and_pop(T &value) {
         std::unique_lock<std::mutex> lk(mut);
-        cond.wait(lk, [this] { return !data.empty(); });
+        cond.wait(lk, [this] { return !data.empty() || is_wait_and_pop_enable == false; });
+
+        if (is_wait_and_pop_enable == false) {
+            return false;
+        }
+
         value = std::move(*data.front());
         data.pop();
+        return true;
     }
 
     /**
@@ -41,7 +53,11 @@ template <typename T> class threadsafe_queue {
      */
     std::shared_ptr<T> wait_and_pop() {
         std::unique_lock<std::mutex> lk(mut);
-        cond.wait(lk, [this] { return !data.empty(); });
+        cond.wait(lk, [this] { return !data.empty() || is_wait_and_pop_enable == false; });
+        if (is_wait_and_pop_enable == false) {
+            return {nullptr};
+        }
+
         std::shared_ptr<T> value = data.front();
         data.pop();
         return value;
