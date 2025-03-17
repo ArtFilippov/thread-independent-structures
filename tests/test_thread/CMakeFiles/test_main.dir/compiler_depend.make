@@ -4,10 +4,12 @@
 CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independent_structures/tests/test_main.cpp \
   /media/sf_sharedVbox/thread_independent_structures/safe_queue/threadsafe_queue.h \
   /media/sf_sharedVbox/thread_independent_structures/thread_pool/Task.h \
+  /media/sf_sharedVbox/thread_independent_structures/thread_pool/TaskManager.h \
   /media/sf_sharedVbox/thread_independent_structures/thread_pool/fine_grained_thread_pool.h \
   /media/sf_sharedVbox/thread_independent_structures/thread_pool/stepwise_function_wrapper.h \
   /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_fine_grained_thread_pool.h \
   /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_shared_result.h \
+  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_task_manager.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -470,8 +472,6 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/x86_64-linux-gnu/sys/cdefs.h:
 
-/usr/include/x86_64-linux-gnu/gnu/stubs.h:
-
 /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h:
@@ -606,15 +606,7 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
 
-/usr/include/c++/13/cerrno:
-
-/usr/include/c++/13/cctype:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
-
-/usr/include/c++/13/ext/atomicity.h:
-
-/usr/include/c++/13/tr1/gamma.tcc:
+/usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
 
 /usr/include/c++/13/variant:
 
@@ -650,6 +642,10 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/locale:
 
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
+
+/usr/include/c++/13/bits/stl_relops.h:
+
 /usr/include/c++/13/tr1/poly_hermite.tcc:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
@@ -678,15 +674,11 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/stl_multiset.h:
 
-/usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
-
 /usr/include/c++/13/bits/sstream.tcc:
 
 /usr/include/c++/13/cwctype:
 
 /usr/include/c++/13/bits/erase_if.h:
-
-/usr/include/c++/13/bits/stringfwd.h:
 
 /usr/include/c++/13/bits/this_thread_sleep.h:
 
@@ -730,7 +722,25 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/locale_facets.h:
 
-/usr/include/c++/13/bits/atomic_futex.h:
+/usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
+
+/usr/include/c++/13/bits/stl_multimap.h:
+
+/usr/include/c++/13/bits/exception_ptr.h:
+
+/usr/include/c++/13/bits/locale_conv.h:
+
+/usr/include/c++/13/bits/istream.tcc:
+
+/usr/include/c++/13/bits/vector.tcc:
+
+/usr/include/c++/13/optional:
+
+/usr/include/c++/13/bits/uniform_int_dist.h:
+
+/usr/include/c++/13/bits/locale_classes.tcc:
 
 /usr/include/c++/13/backward/binders.h:
 
@@ -800,12 +810,6 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/stream_iterator.h:
 
-/usr/include/c++/13/bits/stl_raw_storage_iter.h:
-
-/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
-
-/usr/include/c++/13/algorithm:
-
 /usr/include/c++/13/bits/stl_vector.h:
 
 /usr/include/c++/13/bits/stl_tempbuf.h:
@@ -814,17 +818,31 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/codecvt.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
+/usr/include/x86_64-linux-gnu/c++/13/bits/ctype_base.h:
 
-/usr/include/asm-generic/bitsperlong.h:
+/usr/include/c++/13/any:
 
-/usr/include/asm-generic/types.h:
+/usr/include/asm-generic/posix_types.h:
 
-/usr/include/x86_64-linux-gnu/sys/wait.h:
+/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
 
-/usr/include/c++/13/bits/stl_iterator_base_funcs.h:
+/usr/include/c++/13/tr1/special_function_util.h:
 
-/usr/include/asm-generic/errno-base.h:
+/usr/include/stdc-predef.h:
+
+/usr/include/asm-generic/int-ll64.h:
+
+/usr/include/c++/13/bits/shared_ptr_atomic.h:
+
+/usr/include/c++/13/set:
+
+/usr/include/c++/13/thread:
+
+/media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_fine_grained_thread_pool.h:
+
+/usr/include/c++/13/bits/deque.tcc:
+
+/usr/include/x86_64-linux-gnu/bits/endian.h:
 
 /usr/include/x86_64-linux-gnu/bits/long-double.h:
 
@@ -874,23 +892,33 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/math.h:
 
-/media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_fine_grained_thread_pool.h:
+/usr/include/x86_64-linux-gnu/sys/wait.h:
 
-/usr/include/asm-generic/int-ll64.h:
+/usr/include/c++/13/bits/stl_iterator_base_funcs.h:
 
-/usr/include/c++/13/bits/shared_ptr_atomic.h:
+/usr/include/asm-generic/errno-base.h:
 
-/usr/include/c++/13/set:
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
-/usr/include/c++/13/thread:
-
-/usr/include/c++/13/bits/deque.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/endian.h:
+/media/sf_sharedVbox/thread_independent_structures/thread_pool/TaskManager.h:
 
 /usr/include/assert.h:
 
 /usr/include/c++/13/backward/auto_ptr.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
+
+/usr/include/asm-generic/types.h:
+
+/usr/include/asm-generic/bitsperlong.h:
+
+/usr/include/c++/13/cctype:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
+
+/usr/include/c++/13/ext/atomicity.h:
+
+/usr/include/c++/13/tr1/gamma.tcc:
 
 /usr/include/wchar.h:
 
@@ -898,13 +926,11 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/basic_ios.h:
 
-/usr/include/asm-generic/posix_types.h:
+/usr/include/c++/13/bits/stl_raw_storage_iter.h:
 
-/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
+/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
 
-/usr/include/c++/13/tr1/special_function_util.h:
-
-/usr/include/stdc-predef.h:
+/usr/include/c++/13/algorithm:
 
 /usr/include/c++/13/array:
 
@@ -912,9 +938,19 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/x86_64-linux-gnu/bits/math-vector.h:
 
-/usr/include/x86_64-linux-gnu/c++/13/bits/ctype_base.h:
+/usr/include/c++/13/bits/stringfwd.h:
 
-/usr/include/c++/13/any:
+/media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_task_manager.h:
+
+/media/sf_sharedVbox/thread_independent_structures/tests/test_main.cpp:
+
+/usr/include/c++/13/bits/invoke.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
+
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/c++/13/bits/atomic_futex.h:
 
 /usr/include/c++/13/bits/streambuf.tcc:
 
@@ -926,21 +962,13 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/basic_string.h:
 
-/media/sf_sharedVbox/thread_independent_structures/thread_pool/fine_grained_thread_pool.h:
-
 /usr/include/c++/13/cxxabi.h:
+
+/media/sf_sharedVbox/thread_independent_structures/thread_pool/fine_grained_thread_pool.h:
 
 /usr/include/c++/13/tr1/poly_laguerre.tcc:
 
 /usr/include/libintl.h:
-
-/media/sf_sharedVbox/thread_independent_structures/tests/test_main.cpp:
-
-/usr/include/c++/13/bits/invoke.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
-
-/usr/include/x86_64-linux-gnu/bits/environments.h:
 
 /usr/include/alloca.h:
 
@@ -959,22 +987,6 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 /usr/local/include/gtest/gtest-assertion-result.h:
 
 /usr/include/c++/13/bits/hashtable_policy.h:
-
-/usr/include/c++/13/bits/locale_conv.h:
-
-/usr/include/c++/13/bits/istream.tcc:
-
-/usr/include/c++/13/bits/exception_ptr.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
-
-/usr/include/c++/13/bits/stl_multimap.h:
-
-/usr/include/c++/13/bits/vector.tcc:
-
-/usr/include/c++/13/optional:
 
 /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
 
@@ -1018,13 +1030,7 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: /media/sf_sharedVbox/thread_independ
 
 /usr/include/c++/13/bits/locale_classes.h:
 
-/usr/include/c++/13/bits/stl_relops.h:
-
-/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
-
-/usr/include/c++/13/bits/uniform_int_dist.h:
-
-/usr/include/c++/13/bits/locale_classes.tcc:
+/usr/include/c++/13/cerrno:
 
 /usr/include/c++/13/chrono:
 

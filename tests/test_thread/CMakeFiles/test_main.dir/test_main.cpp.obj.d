@@ -330,4 +330,6 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: \
  /usr/include/c++/13/bits/stl_queue.h /usr/include/c++/13/chrono \
  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_shared_result.h \
  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/../../thread_pool/Task.h \
- /usr/include/c++/13/thread /usr/include/c++/13/bits/this_thread_sleep.h
+ /usr/include/c++/13/thread /usr/include/c++/13/bits/this_thread_sleep.h \
+ /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_task_manager.h \
+ /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/../../thread_pool/TaskManager.h
