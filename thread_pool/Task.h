@@ -4,6 +4,8 @@
 #include <future>
 #include <mutex>
 #include <memory>
+#include <functional>
+#include <type_traits>
 
 #include "fine_grained_thread_pool.h"
 #include "stepwise_function_wrapper.h"
@@ -121,27 +123,36 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
 
     std::mutex share_lock_mut;
 
-    // Функция и результат
-    wrapped_function<T> task_base;
+    std::function<bool(void)> cancel_condition{[]() { return false; }};
+
+    std::function<void(void)> on_complete{[]() { return; }};
+
+    std::function<std::optional<T>(void)> main_func;
 
     Result result;
 
     // Приватный конструктор для создания объекта через фабричный метод
-    Task() {}
 
-    template <typename MainFunc, typename CancelCondition, typename OnComplete>
-    void wrap_service_function(MainFunc &&task, CancelCondition &&cancel_condition, OnComplete &&on_complete) {
-        auto wrapped_cancel_cond = [=, control_block = this->shared_from_this()]() mutable {
-            return cancel_condition() || !control_block->has_active_results() || control_block->need_to_kill();
+    Task(std::function<std::optional<T>(void)> main_func, std::function<bool(void)> cancel_condition,
+         std::function<void(void)> on_complete)
+        : main_func(main_func), cancel_condition(cancel_condition), on_complete(on_complete) {}
+
+    auto wrap_service_function() {
+        auto wrapped_cancel_cond = [=, con_cond = cancel_condition,
+                                    control_block = this->shared_from_this()]() mutable -> bool {
+            return con_cond() || !control_block->has_active_results() || control_block->need_to_kill();
         };
 
-        auto wrapped_callback = [=, control_block = this->shared_from_this()]() mutable {
+        auto wrapped_callback = [=, on_compl = on_complete,
+                                 control_block = this->shared_from_this()]() mutable -> void {
             control_block->mark_task_as_complete();
-            on_complete();
+            on_compl();
         };
 
-        task_base = stepwise_function_wrapper::wrap(std::move(task), std::move(wrapped_cancel_cond),
-                                                    std::move(wrapped_callback));
+        auto wrapped_task = [=]() mutable -> std::optional<T> { return main_func(); };
+
+        return stepwise_function_wrapper::wrap(std::move(wrapped_task), std::move(wrapped_cancel_cond),
+                                               std::move(wrapped_callback));
     }
 
   public:
@@ -150,27 +161,19 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
      *
      * @return std::shared_ptr<Task<T>> Указатель на созданный объект.
      */
-    template <typename MainFunc, typename CancelCondition, typename OnComplete>
-    static auto create(MainFunc &&task, CancelCondition &&cancel_condition, OnComplete &&on_complete) {
-        auto instance = std::shared_ptr<Task<T>>(new Task<T>());
-
-        instance->wrap_service_function(std::move(task), std::move(cancel_condition), std::move(on_complete));
-        instance->result = Result(instance->task_base.future.share());
+    static auto create(
+        std::function<std::optional<T>(void)> main_func, std::function<bool(void)> cancel_condition,
+        std::function<void(void)> on_complete = []() { return; }) {
+        auto instance = std::shared_ptr<Task<T>>(new Task<T>(main_func, cancel_condition, on_complete));
 
         return instance;
     }
 
-    template <typename MainFunc, typename CancelCondition>
-    static std::shared_ptr<Task<T>> create(MainFunc &&task, CancelCondition &&cancel_condition) {
-        return create(std::move(task), std::move(cancel_condition), []() { return; });
-    }
+    static auto
+    create(std::function<std::optional<T>(void)> main_func, std::function<void(void)> on_complete = []() { return; }) {
+        auto instance = Task<T>::create(main_func, []() { return false; }, on_complete);
 
-    template <typename MainFunc> static std::shared_ptr<Task<T>> create(MainFunc &&task) {
-        return create(std::move(task), []() -> bool { return false; }, []() { return; });
-    }
-
-    static std::shared_ptr<Task<T>> create() {
-        return create([]() { return T{}; }, []() -> bool { return false; }, []() { return; });
+        return instance;
     }
 
     void kill() { kill_flag.store(true); }
@@ -186,29 +189,44 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
      * @param on_complete Обработчик завершения задачи.
      * @return Result<T> Объект, представляющий результат задачи.
      */
-    template <typename MainFunc, typename CancelCondition, typename OnComplete>
-    Result share(std::shared_ptr<fine_grained_thread_pool> &pool, MainFunc &&task, CancelCondition &&cancel_condition,
-                 OnComplete &&on_complete) {
+    Result share(std::shared_ptr<fine_grained_thread_pool> &pool) {
         std::lock_guard<std::mutex> lg{share_lock_mut};
 
         bool current = false;
 
         // Если задача не активна, инициализируем новую задачу
         if (is_task_active.compare_exchange_strong(current, true)) {
-            wrap_service_function(std::move(task), std::move(cancel_condition), std::move(on_complete));
+            auto task_base = wrap_service_function();
+
+            kill_flag.store(false);
+
             result = Result(pool->submit(task_base).share());
         }
 
         return result;
     }
 
-    template <typename MainFunc, typename CancelCondition>
-    Result share(std::shared_ptr<fine_grained_thread_pool> &pool, MainFunc &&task, CancelCondition &&cancel_condition) {
-        return share(pool, std::move(task), std::move(cancel_condition), []() { return; });
-    }
+    Result share(std::shared_ptr<fine_grained_thread_pool> &pool, std::shared_ptr<Task<T>> other_ptr) {
+        std::lock_guard<std::mutex> lg{share_lock_mut};
 
-    template <typename MainFunc> Result share(std::shared_ptr<fine_grained_thread_pool> &pool, MainFunc &&task) {
-        return share(pool, std::move(task), []() { return false; }, []() { return; });
+        Task<T> &other = *other_ptr;
+
+        bool current = false;
+
+        // Если задача не активна, инициализируем новую задачу
+        if (is_task_active.compare_exchange_strong(current, true)) {
+            main_func = other.main_func;
+            cancel_condition = other.cancel_condition;
+            on_complete = other.on_complete;
+
+            auto task_base = wrap_service_function();
+
+            kill_flag.store(false);
+
+            result = Result(pool->submit(task_base).share());
+        }
+
+        return result;
     }
 
     /**

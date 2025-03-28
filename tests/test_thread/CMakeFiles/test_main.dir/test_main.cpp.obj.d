@@ -331,5 +331,7 @@ CMakeFiles/test_main.dir/test_main.cpp.obj: \
  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_shared_result.h \
  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/../../thread_pool/Task.h \
  /usr/include/c++/13/thread /usr/include/c++/13/bits/this_thread_sleep.h \
- /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_task_manager.h \
- /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/../../thread_pool/TaskManager.h
+ /media/sf_sharedVbox/thread_independent_structures/tests/connection/test_connection.h \
+ /media/sf_sharedVbox/thread_independent_structures/tests/connection/../../connection/QueueConnection.h \
+ /media/sf_sharedVbox/thread_independent_structures/tests/connection/../../connection/IConnection.h \
+ /media/sf_sharedVbox/thread_independent_structures/tests/connection/../../connection/../safe_queue/cyclic_queue.h

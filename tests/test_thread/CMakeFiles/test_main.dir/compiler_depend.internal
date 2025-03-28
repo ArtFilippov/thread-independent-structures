@@ -3,14 +3,16 @@
 
 CMakeFiles/test_main.dir/test_main.cpp.obj
  /media/sf_sharedVbox/thread_independent_structures/tests/test_main.cpp
+ /media/sf_sharedVbox/thread_independent_structures/safe_queue/cyclic_queue.h
+ /media/sf_sharedVbox/thread_independent_structures/connection/IConnection.h
+ /media/sf_sharedVbox/thread_independent_structures/connection/QueueConnection.h
+ /media/sf_sharedVbox/thread_independent_structures/tests/connection/test_connection.h
  /media/sf_sharedVbox/thread_independent_structures/safe_queue/threadsafe_queue.h
  /media/sf_sharedVbox/thread_independent_structures/thread_pool/Task.h
- /media/sf_sharedVbox/thread_independent_structures/thread_pool/TaskManager.h
  /media/sf_sharedVbox/thread_independent_structures/thread_pool/fine_grained_thread_pool.h
  /media/sf_sharedVbox/thread_independent_structures/thread_pool/stepwise_function_wrapper.h
  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_fine_grained_thread_pool.h
  /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_shared_result.h
- /media/sf_sharedVbox/thread_independent_structures/tests/thread_pool/test_task_manager.h
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
  /usr/include/asm-generic/errno-base.h

@@ -16,7 +16,7 @@ class test_shared_result : public ::testing::Test {
   public:
     void SetUp() { pool = std::make_unique<fine_grained_thread_pool>(1); }
 
-    task_ptr<int> block{Task<int>::create([]() { return 1; })};
+    task_ptr<int> block{Task<int>::create([]() { return 1; }, []() { return false; }, []() { return; })};
 
     std::shared_ptr<fine_grained_thread_pool> pool;
 };
@@ -38,12 +38,14 @@ TEST_F(test_shared_result, reference_count) {
     std::stringstream log;
     auto notice = [&log]() mutable -> void { log << "stop"; };
 
+    block->share(pool, Task<int>::create(task, cond, notice));
+
     {
-        auto res = block->share(pool, task, cond, std::move(notice));
-        auto res1 = block->share(pool, task, cond, notice);
-        auto res2 = block->share(pool, task, cond, notice);
-        auto res3 = block->share(pool, task, cond, notice);
-        auto res4 = block->share(pool, task, cond, notice);
+        auto res = block->share(pool);
+        auto res1 = block->share(pool);
+        auto res2 = block->share(pool);
+        auto res3 = block->share(pool);
+        auto res4 = block->share(pool);
         auto res5 = res4;
     }
 
@@ -72,7 +74,7 @@ TEST_F(test_shared_result, vector) {
     auto notice = [=, &log]() mutable -> void { log << "stop"; };
 
     {
-        auto res = block->share(pool, task, cond, notice);
+        auto res = block->share(pool, Task<int>::create(task, cond, notice));
         for (int i = 0; i < TASKS_NUMBER; ++i) {
             results.push_back(res);
         }

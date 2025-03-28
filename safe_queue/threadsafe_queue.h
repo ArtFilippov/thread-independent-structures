@@ -5,8 +5,10 @@
 #include <memory>
 #include <queue>
 
-template <typename T> class threadsafe_queue {
+enum queue_status { PUSH_OK = 0, PUSH_WITH_DISPLACEMENT };
 
+template <typename T> class threadsafe_queue {
+  protected:
     mutable std::mutex mut;
     std::queue<std::shared_ptr<T>> data;
     std::condition_variable cond;
@@ -111,8 +113,9 @@ template <typename T> class threadsafe_queue {
     /**
      * @brief
      * - Оборачивает `value` в `std::shared_ptr` и добавляет его в очередь
+     * @return статус выполнения
      */
-    void push(T value) {
+    virtual int push(T value) {
         // нельзя принимать значение по ссылке, так как в этом случае оригинальный объект будет перемещён.
         // при этом, если необходимо переместить объект, вызываем push(std::move(value)) и вызывается конструктор
         // копирования перемещением.
@@ -121,16 +124,20 @@ template <typename T> class threadsafe_queue {
         std::lock_guard<std::mutex> lg(mut);
         data.push(new_value);
         cond.notify_one();
+
+        return queue_status::PUSH_OK;
     }
 
     /**
      * @brief
      * - Помещает в очередь уже обёрнутое в `std::shared_ptr` значение
      */
-    void push(const std::shared_ptr<T> &value) {
+    virtual int push(const std::shared_ptr<T> &value) {
         std::lock_guard<std::mutex> lg(mut);
         data.push(value);
         cond.notify_one();
+
+        return queue_status::PUSH_OK;
     }
 
     /**

@@ -16,11 +16,12 @@ class test_shared_result : public ::testing::Test {
   public:
     void SetUp() { pool = std::make_unique<fine_grained_thread_pool>(1); }
 
-    task_ptr<int> block{Task<int>::create([]() { return 1; })};
+    std::function<int()> m = []() -> int { return 1; };
+    task_ptr<int> block{Task<int>::create(m, []() { return false; }, []() { return; })};
 
     std::shared_ptr<fine_grained_thread_pool> pool;
 
-    TaskManager<int, char> tm{};
+    TaskManager<int> tm{};
 };
 
 TEST_F(test_shared_result, test_add) {
