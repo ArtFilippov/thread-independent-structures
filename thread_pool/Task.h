@@ -149,7 +149,7 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
             on_compl();
         };
 
-        auto wrapped_task = [=]() mutable -> std::optional<T> { return main_func(); };
+        auto wrapped_task = [=, main_f = main_func]() mutable -> std::optional<T> { return main_f(); };
 
         return stepwise_function_wrapper::wrap(std::move(wrapped_task), std::move(wrapped_cancel_cond),
                                                std::move(wrapped_callback));
