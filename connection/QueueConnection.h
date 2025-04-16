@@ -62,7 +62,8 @@ template <typename T> class QueueConnectionSender : public IConnectionSender<T> 
             return {nullptr};
         }
 
-        std::shared_ptr<T> waitAndReceive() override {
+        std::shared_ptr<T> waitAndReceive() override { // TODO: написал проверку на наличие писателей, иначе рискуем
+                                                       // зависнуть здесь навсегда. Требуется протестировать
             std::shared_ptr<T> inst = base->data.wait_and_pop();
             if (inst) {
                 return inst;
@@ -107,6 +108,8 @@ template <typename T> class QueueConnectionSender : public IConnectionSender<T> 
     QueueConnectionSender(QueueConnectionSender &&other)
         : base(std::move(other.base)), is_closed(other.is_closed.load()) {}
 
+    ~QueueConnectionSender() { close(); }
+
     int send(const T &frame) override {
         if (!base) {
             return connection_sender_status::ERROR;
@@ -144,7 +147,9 @@ template <typename T> class QueueConnectionSender : public IConnectionSender<T> 
 
         if (is_closed.compare_exchange_strong(current, true)) {
             if (base) {
-                base->senderCounter.fetch_sub(1);
+                if (base->senderCounter.fetch_sub(1) == 1) {
+                    base->data.disable_wait_and_pop();
+                }
             }
         }
     }
