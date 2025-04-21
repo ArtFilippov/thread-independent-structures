@@ -7,6 +7,8 @@
 #include <functional>
 #include <type_traits>
 
+#include <iostream>
+
 #include "fine_grained_thread_pool.h"
 #include "stepwise_function_wrapper.h"
 
@@ -36,7 +38,7 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
          * @param future Результат задачи.
          */
         Result(const std::shared_future<T> &future) noexcept
-            : result_reference_count(std::make_shared<std::atomic_int>(0)), task_future(future) {}
+            : result_reference_count(std::make_shared<std::atomic_int>(1)), task_future(future) {}
 
       public:
         /**
@@ -75,7 +77,7 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
         /**
          * @brief Возвращает количество активных ссылок на результат задачи.
          */
-        int count() const { return result_reference_count ? result_reference_count->load() : 0; }
+        int count() const { return result_reference_count ? result_reference_count->load() : 1; }
 
         /**
          * @brief Ожидает завершения задачи.
@@ -194,16 +196,21 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
 
         bool current = false;
 
+        Result resToRet;
         // Если задача не активна, инициализируем новую задачу
         if (is_task_active.compare_exchange_strong(current, true)) {
             auto task_base = wrap_service_function();
 
             kill_flag.store(false);
 
-            result = Result(pool->submit(task_base).share());
+            result = Result(pool->submit(task_base).share()); // result_reference_count = 1;
+            resToRet = result;                                // result_reference_count = 2;
+            result.result_reference_count->store(1);          // result_reference_count = 1;
+        } else {
+            resToRet = result; // после завершения функции всего будет 1 копия снаружи и одна копия внутри
         }
 
-        return result;
+        return resToRet;
     }
 
     Result share(std::shared_ptr<fine_grained_thread_pool> &pool, std::shared_ptr<Task<T>> other_ptr) {
@@ -212,6 +219,8 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
         Task<T> &other = *other_ptr;
 
         bool current = false;
+
+        Result resToRet;
 
         // Если задача не активна, инициализируем новую задачу
         if (is_task_active.compare_exchange_strong(current, true)) {
@@ -223,10 +232,14 @@ template <typename T> class Task : public std::enable_shared_from_this<Task<T>> 
 
             kill_flag.store(false);
 
-            result = Result(pool->submit(task_base).share());
+            result = Result(pool->submit(task_base).share()); // result_reference_count = 1;
+            resToRet = result;                                // result_reference_count = 2;
+            result.result_reference_count->store(1);          // result_reference_count = 1;
+        } else {
+            resToRet = result; // после завершения функции всего будет 1 копия снаружи и одна копия внутри
         }
 
-        return result;
+        return resToRet;
     }
 
     /**
